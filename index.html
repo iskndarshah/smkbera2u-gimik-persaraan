@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SMKBERA2U | Sistem Kehadiran</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Page transitions */
+        .page {
+            width: 100%;
+            max-width: 420px;
+            background-color: #ffffff;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 70px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin: 0 auto;
+        }
+        .page-hidden {
+            display: none;
+        }
+        .page-visible {
+            display: block;
+        }
+
+        /* ---------- LOADING SCREEN ---------- */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #0a2a3b, #123e52);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.6s ease;
+        }
+        .loading-hidden {
+            display: none;
+        }
+        .logo-frame {
+            width: 180px;
+            height: 180px;
+            background: white;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-shadow: 0 30px 45px rgba(0,0,0,0.2);
+            animation: pulseGlow 1.2s infinite alternate;
+        }
+        .logo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        @keyframes pulseGlow {
+            0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(255,215,0,0.3); }
+            100% { transform: scale(1.04); box-shadow: 0 0 0 15px rgba(255,215,0,0); }
+        }
+        .loading-text {
+            margin-top: 2rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: #FFD966;
+            letter-spacing: 3px;
+        }
+        .progress-ring {
+            margin-top: 1.5rem;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,215,0,0.2);
+            border-top: 3px solid #FFD966;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ---------- PAGE 1: DASHBOARD (MENU UTAMA) ---------- */
+        .dashboard {
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .hero {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .logo-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 0.5rem;
+        }
+        .logo-solid {
+            width: 70px;
+            height: 70px;
+            background: white;
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+        }
+        .logo-solid img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            background: linear-gradient(125deg, #1A3C5C, #C49A3F);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .menu-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1rem 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .menu-card i {
+            font-size: 1.8rem;
+            color: #C49A3F;
+            margin-bottom: 0.5rem;
+        }
+        .menu-card span {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #1f3e54;
+        }
+        .menu-card small {
+            font-size: 0.65rem;
+            color: #7c9cbb;
+        }
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+            border-color: #C49A3F;
+        }
+        .highlight-card {
+            background: #fff9ef;
+            border: 1px solid #C49A3F;
+        }
+
+        /* ---------- PAGE 2: KEHADIRAN ---------- */
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            background-color: #ffffff;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 70px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #4285F4;
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header .material-icons {
+            font-size: 24px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        .header .school-logo {
+            width: 28px;
+            height: 28px;
+            background: white;
+            border-radius: 8px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .header .school-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .header .title {
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            flex: 1;
+        }
+        .map-section {
+            height: 180px;
+            background-color: #e0e0e0;
+            position: relative;
+            border-bottom: 1px solid #ddd;
+        }
+        .map-section iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .form-container {
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #5f6368;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .input-box {
+            display: flex;
+            align-items: center;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            padding: 12px 15px;
+            background-color: #fff;
+        }
+        .input-box.readonly {
+            background-color: #f8f9fa;
+        }
+        .input-box .value-text {
+            flex-grow: 1;
+            font-size: 15px;
+            color: #202124;
+            font-weight: 500;
+        }
+        .input-box .material-icons {
+            color: #5f6368;
+            font-size: 20px;
+        }
+        .btn-pulang {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #dadce0;
+            background-color: #f8f9fa;
+            text-align: center;
+            font-size: 15px;
+            color: #5f6368;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn-pulang:hover {
+            background-color: #f1f3f4;
+        }
+        .bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 30px;
+            background-color: #fff;
+            border-top: 1px solid #dadce0;
+        }
+        .bottom-bar button {
+            background: none;
+            border: none;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 10px;
+        }
+        .btn-cancel {
+            color: #3c4043;
+        }
+        .btn-save {
+            color: #1a73e8;
+            font-weight: 700 !important;
+        }
+
+        /* ---------- CUTSCENE ---------- */
+        .cutscene-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 42, 59, 0.96);
+            backdrop-filter: blur(12px);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease, visibility 0s linear 0.8s;
+        }
+        .cutscene-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.8s ease, visibility 0s linear 0s;
+        }
+        .cutscene-container {
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            animation: fadeInUp 0.8s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .cutscene-logo {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 30px;
+            margin: 0 auto 1.5rem auto;
+            padding: 12px;
+        }
+        .cutscene-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .cutscene-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FFE5B4, #FFD700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+        .cutscene-blessing {
+            font-size: 1.2rem;
+            color: #FFE5B4;
+            margin: 1rem 0;
+            font-family: 'Playfair Display', serif;
+        }
+        .cutscene-sub {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            margin-top: 0.5rem;
+        }
+        .cutscene-divider {
+            width: 60px;
+            height: 2px;
+            background: #FFD966;
+            margin: 1rem auto;
+        }
+        .cutscene-thanks {
+            font-size: 1.4rem;
+            color: #FFD966;
+            margin-top: 1rem;
+        }
+        .btn-back-home {
+            background: #C49A3F;
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 60px;
+            margin-top: 2rem;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: 0.2s;
+            display: inline-block;
+        }
+        .btn-back-home:hover {
+            background: #b8892e;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen" class="loading-screen loading-hidden">
+    <div class="logo-frame">
+        <img src="SMKBERA.jpeg" alt="Logo Sekolah" onerror="this.src='https://via.placeholder.com/150?text=SMK'">
+    </div>
+    <div class="loading-text"></div>
+    <div class="progress-ring"></div>
+</div>
+
+<!-- PAGE 1: DASHBOARD (MENU UTAMA) -->
+<div id="page1" class="page page-visible">
+    <div class="dashboard">
+        <div class="hero">
+            <div class="logo-header">
+                <div class="logo-solid">
+                    <img src="SMKBERA.jpeg" alt="Logo" onerror="this.src='https://via.placeholder.com/70?text=SMK'">
+                </div>
+                <h1>SMKBERA2U</h1>
+            </div>
+        </div>
+
+        <div class="menu-grid">
+            <div class="menu-card highlight-card" id="ehadirTrigger">
+                <i class="fas fa-fingerprint"></i>
+                <span>eHADIR</span>
+                <small>Log in / Log out</small>
+            </div>
+            <div class="menu-card"><i class="fas fa-map-marker-alt"></i><span>eKEBERADAAN</span><small>Keberadaan Guru & AKP</small></div>
+            <div class="menu-card"><i class="fas fa-user-check"></i><span>eKEHADIRAN MURID</span><small>Rekod Kehadiran</small></div>
+            <div class="menu-card"><i class="fas fa-door-open"></i><span>eTEMPAHAN BILIK</span><small>Sistem Tempahan</small></div>
+            <div class="menu-card"><i class="fas fa-chart-line"></i><span>eLAPORAN AKTIVITI</span><small>Jana laporan auto</small></div>
+            <div class="menu-card"><i class="fas fa-database"></i><span>APDM</span><small>Aplikasi Pangkalan Data</small></div>
+            <div class="menu-card"><i class="fas fa-id-card"></i><span>SSDM</span><small>Sistem Sahsiah Diri</small></div>
+            <div class="menu-card"><i class="fas fa-globe"></i><span>WEBSITE SEKOLAH</span><small>Laman Sesawang</small></div>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE 2: KEHADIRAN dengan lokasi tetap SMKBERA2U -->
+<div id="page2" class="page page-hidden">
+    <div class="app-container">
+        <div class="header">
+            <i class="material-icons" id="backToDashboardFromHeader">menu</i>
+            <div class="school-logo">
+                <img src="SMKBERA.jpeg" alt="Logo" onerror="this.src='https://via.placeholder.com/28'">
+            </div>
+            <div class="title">KEHADIRAN</div>
+        </div>
+
+        <!-- PETA dengan lokasi SMKBERA2U (koordinat sekolah di Bera, Pahang) -->
+        <div class="map-section">
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3986.123456789012!2d102.4075!3d3.4712!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zM8KwMjgnMTYuMiJOIDEwMsKwMjQnMjcuMCJF!5e0!3m2!1sen!2smy!4v1650000000000!5m2!1sen!2smy&q=SMKBERA2U" 
+                allowfullscreen="" loading="lazy"
+                title="Lokasi SMKBERA2U">
+            </iframe>
+        </div>
+
+        <div class="form-container">
+            <div class="form-group">
+                <label>TIMESTAMP*</label>
+                <div class="input-box readonly">
+                    <span class="value-text" id="timestampDisplay">16 Apr 2026 at 6:24 AM</span>
+                    <i class="material-icons">calendar_today</i>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>NAMA*</label>
+                <div class="input-box readonly">
+                    <span class="value-text" id="teacherNameDisplay">Anwar bin Abdul Aziz</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>IN</label>
+                <div class="input-box readonly">
+                    <span class="value-text">7:30 AM</span>
+                    <i class="material-icons">access_time</i>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>TEMPOH BEKERJA KINI</label>
+                <div class="input-box readonly">
+                    <span class="value-text" id="workingDuration">0:00</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>LOGOUT PULANG*</label>
+                <div id="pulangBtnMiddle" class="btn-pulang">PULANG</div>
+            </div>
+        </div>
+
+        <div class="bottom-bar">
+            <button id="cancelBtn" class="btn-cancel">Cancel</button>
+            <button id="saveBtn" class="btn-save">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- CUTSCENE OVERLAY -->
+<div id="cutsceneOverlay" class="cutscene-overlay">
+    <div class="cutscene-container">
+        <div class="cutscene-logo">
+            <img src="SMKBERA.jpeg" alt="Logo" onerror="this.src='https://via.placeholder.com/80'">
+        </div>
+        <div class="cutscene-name" id="cutsceneName">Anwar bin Abdul Aziz</div>
+        <div class="cutscene-divider"></div>
+        <div class="cutscene-blessing">✨ Seulas budi, sejuta memori ✨</div>
+        <div class="cutscene-blessing" style="font-size: 1rem;">Terima kasih atas segalanya</div>
+        <div class="cutscene-sub">Kami mengucapkan setinggi-tinggi penghargaan</div>
+        <div class="cutscene-divider"></div>
+        <div class="cutscene-thanks">🔶 SELAMAT BERSARA 🔶</div>
+        <button id="backToHomeBtn" class="btn-back-home">Kembali ke Halaman Utama</button>
+    </div>
+</div>
+
+<script>
+    // -------------------- 1. ELEMEN & NAVIGASI --------------------
+    const page1 = document.getElementById('page1');
+    const page2 = document.getElementById('page2');
+    const loadingScreen = document.getElementById('loadingScreen');
+    const ehadirBtn = document.getElementById('ehadirTrigger');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const pulangBtnMiddle = document.getElementById('pulangBtnMiddle');
+    const backToDashboardFromHeader = document.getElementById('backToDashboardFromHeader');
+    const timestampDisplay = document.getElementById('timestampDisplay');
+    const workingDurationSpan = document.getElementById('workingDuration');
+    const cutsceneOverlay = document.getElementById('cutsceneOverlay');
+    const backToHomeBtn = document.getElementById('backToHomeBtn');
+    const cutsceneNameSpan = document.getElementById('cutsceneName');
+
+    let loadingTimeout = null;
+    let durationInterval = null;
+
+    // Nama tetap
+    const TEACHER_NAME = "Anwar bin Abdul Aziz";
+
+    // Fungsi kemaskini timestamp dan tempoh bekerja (dari 7:30 AM)
+    function updateDateTime() {
+        const now = new Date();
+        const day = now.getDate();
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const month = months[now.getMonth()];
+        const year = now.getFullYear();
+        let hours = now.getHours();
+        const minutes = now.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        const timeStr = `${hours}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
+        timestampDisplay.innerText = `${day} ${month} ${year} at ${timeStr}`;
+
+        // Kira tempoh bekerja dari 7:30 AM
+        const startWork = new Date();
+        startWork.setHours(7, 30, 0, 0);
+        let diffMs = now - startWork;
+        if (diffMs < 0) diffMs = 0;
+        const totalMinutes = Math.floor(diffMs / 60000);
+        const hrs = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        workingDurationSpan.innerText = `${hrs}:${mins < 10 ? '0' + mins : mins}`;
+    }
+
+    function startDurationTimer() {
+        if (durationInterval) clearInterval(durationInterval);
+        updateDateTime();
+        durationInterval = setInterval(updateDateTime, 1000);
+    }
+
+    function stopDurationTimer() {
+        if (durationInterval) clearInterval(durationInterval);
+    }
+
+    function resetPage2() {
+        startDurationTimer();
+    }
+
+    function goToPage2() {
+        page1.classList.remove('page-visible');
+        page1.classList.add('page-hidden');
+        loadingScreen.classList.remove('loading-hidden');
+        if (loadingTimeout) clearTimeout(loadingTimeout);
+        loadingTimeout = setTimeout(() => {
+            loadingScreen.classList.add('loading-hidden');
+            resetPage2();
+            page2.classList.remove('page-hidden');
+            page2.classList.add('page-visible');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            loadingTimeout = null;
+        }, 5000);
+    }
+
+    function backToDashboard() {
+        if (loadingTimeout) {
+            clearTimeout(loadingTimeout);
+            loadingScreen.classList.add('loading-hidden');
+        }
+        stopDurationTimer();
+        cutsceneOverlay.classList.remove('active');
+        page2.classList.remove('page-visible');
+        page2.classList.add('page-hidden');
+        page1.classList.remove('page-hidden');
+        page1.classList.add('page-visible');
+        window.scrollTo({ top: 0 });
+    }
+
+    if (ehadirBtn) ehadirBtn.addEventListener('click', goToPage2);
+    if (cancelBtn) cancelBtn.addEventListener('click', backToDashboard);
+    if (backToDashboardFromHeader) backToDashboardFromHeader.addEventListener('click', backToDashboard);
+
+    // -------------------- 2. LAGU & KONFETI --------------------
+    let audioCtx = null;
+    let melodyActive = false;
+
+    async function playMelody() {
+        if (melodyActive) return;
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            melodyActive = true;
+            const now = audioCtx.currentTime;
+            const notes = [
+                { freq: 392, dur: 0.48, delay: 0 }, { freq: 440, dur: 0.48, delay: 0.52 },
+                { freq: 493.88, dur: 0.58, delay: 1.05 }, { freq: 523.25, dur: 0.68, delay: 1.7 },
+                { freq: 493.88, dur: 0.48, delay: 2.42 }, { freq: 440, dur: 0.58, delay: 2.98 },
+                { freq: 392, dur: 1.05, delay: 3.65 }, { freq: 349.23, dur: 0.72, delay: 4.8 },
+                { freq: 392, dur: 1.9, delay: 5.6 }
+            ];
+            for (let n of notes) {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.value = n.freq;
+                gain.gain.value = 0.28;
+                const startT = now + n.delay;
+                const endT = startT + n.dur;
+                osc.start(startT);
+                gain.gain.exponentialRampToValueAtTime(0.0001, endT);
+                osc.stop(endT);
+            }
+            const chordGain = audioCtx.createGain();
+            chordGain.connect(audioCtx.destination);
+            chordGain.gain.value = 0.1;
+            const c1 = audioCtx.createOscillator(), c2 = audioCtx.createOscillator();
+            c1.type = 'triangle'; c2.type = 'triangle';
+            c1.frequency.value = 392; c2.frequency.value = 523.25;
+            c1.connect(chordGain); c2.connect(chordGain);
+            const chordStart = now + 5.3;
+            c1.start(chordStart); c2.start(chordStart);
+            c1.stop(chordStart + 2.6); c2.stop(chordStart + 2.6);
+            chordGain.gain.exponentialRampToValueAtTime(0.0001, chordStart + 2.8);
+            setTimeout(() => { melodyActive = false; }, 8500);
+        } catch (e) { melodyActive = false; }
+    }
+
+    function fireConfetti() {
+        canvasConfetti({ particleCount: 220, spread: 95, origin: { y: 0.65 }, colors: ['#C49A3F', '#e76f51', '#ffd966'] });
+        setTimeout(() => canvasConfetti({ particleCount: 130, spread: 110, origin: { y: 0.45, x: 0.2 }, startVelocity: 16 }), 150);
+        setTimeout(() => canvasConfetti({ particleCount: 130, spread: 110, origin: { y: 0.45, x: 0.8 }, startVelocity: 16 }), 200);
+        setTimeout(() => canvasConfetti({ particleCount: 250, spread: 65, origin: { y: 0.55 }, startVelocity: 20 }), 400);
+    }
+
+    function showCutscene() {
+        cutsceneNameSpan.innerText = TEACHER_NAME;
+        cutsceneOverlay.classList.add('active');
+        playMelody();
+        fireConfetti();
+        if (navigator.vibrate) navigator.vibrate(180);
+    }
+
+    function handlePulang() {
+        showCutscene();
+    }
+
+    if (saveBtn) saveBtn.addEventListener('click', handlePulang);
+    if (pulangBtnMiddle) pulangBtnMiddle.addEventListener('click', handlePulang);
+
+    if (backToHomeBtn) {
+        backToHomeBtn.addEventListener('click', () => {
+            cutsceneOverlay.classList.remove('active');
+            backToDashboard();
+        });
+    }
+
+    window.addEventListener('beforeunload', () => {
+        if (durationInterval) clearInterval(durationInterval);
+    });
+</script>
+</body>
+</html>
